@@ -1,5 +1,6 @@
 package game2048;
 
+import java.util.ArrayList;
 import java.util.Formatter;
 
 
@@ -93,8 +94,15 @@ public class Model {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int size = b.size();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
 
-
+            }
+        }
         return false;
     }
 
@@ -105,8 +113,17 @@ public class Model {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
-
-
+        int size = b.size();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                Tile currentTile = b.tile(i, j);
+                if (currentTile != null) {
+                    if (currentTile.value() == MAX_PIECE) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
@@ -118,8 +135,34 @@ public class Model {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+//        situation1: exist empty tile
+//        situation1: check by row
+//        situation3: check by col
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+        int size = b.size();
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                Tile currentTile = b.tile(col, row);
+                int currentValue = currentTile.value();
+                int adjacentCol = col + 1;
+                int adjacentRow = row + 1;
+                if (adjacentCol < size) {
+                    Tile adjcentColTile = b.tile(adjacentCol, row);
+                    if (currentValue == adjcentColTile.value()) {
+                        return true;
+                    }
+                }
+                if (adjacentRow < size) {
+                    Tile adjcentRowTile = b.tile(col, adjacentRow);
+                    if (currentValue == adjcentRowTile.value()) {
+                        return true;
+                    }
+                }
+            }
 
-
+        }
         return false;
     }
 
@@ -135,11 +178,37 @@ public class Model {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+
     public void tilt(Side side) {
         // TODO: Modify this.board (and if applicable, this.score) to account
         // for the tilt to the Side SIDE.
-
-
+        board.setViewingPerspective(side);
+        int size = board.size();
+        // move tile in row 2
+        for (int x = 0; x < size; x++) {
+            boolean[] isMerged = new boolean[size];
+            for (int y = size - 1; y >= 0; y--) {
+                for (int moveDistant = size - y - 1; moveDistant > 0; moveDistant--) {
+                    Tile curTile = board.tile(x, y);
+                    if (curTile != null) {
+                        int targetX = x;
+                        int targetY = y + moveDistant;
+                        Tile targetTile = board.tile(targetX, targetY);
+                        if (targetTile == null) {
+                            board.move(targetX, targetY, curTile);
+                            break;
+                        } else if (targetTile.value() == curTile.value() && isMerged[targetY] == false) {
+                            int curTileScore = curTile.value();
+                            board.move(targetX, targetY, curTile);
+                            score += curTileScore * 2;
+                            isMerged[targetY] = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
     }
 
